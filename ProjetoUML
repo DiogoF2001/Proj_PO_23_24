@@ -1,0 +1,482 @@
+ /* CLASSES A FAZER: 
+
+ * Do dominio da aplicaçao e que representam a lógica de negócio da aplicação Quase todas na (SECÇAO 1). 
+ * existem outras entidades e descobrir funcionalidades que devem ser suportadas pelas entidades do domínio por forma a ser possível realizar as operações 
+ * oferecidas ao utilizador (descritas nas secções 3 e 4)
+  
+ * Nao fazer: (As classes que estão relacionadas com a interface com o utilizador (comandos e menus)) Feito mas comentado
+ */
+
+ 
+ /*ENTREGA:
+    
+ O diagrama de classes entregue deve ser MANUSCRITO e PDF
+ Apenas são aceites diagramas manuscritos e posteriormente digitalizados (usando uma aplicação como nas aulas laboratoriais)
+
+
+  */
+
+
+
+ /* CLASSES JA DEFENIDAS:
+  
+    Calculator: representa a aplicação calculadora e deve manter a informação da aplicação e é o ponto de entrada entre o código de interacção com o 
+    utilizador e o código da lógica de domínio. Representa a entidade que é utilizada nos vários comandos do menu principal
+    
+    Spreadsheet: representa uma folha de cálculo 
+
+    Celulas:
+
+    Conteudo:
+
+    Gamas:
+
+    Utilizador:
+  */ 
+
+
+//Resumo principal das classes
+
+1. **Classe FolhaDeCalculo**
+   - Atributos:
+     + numeroDeLinhas: int
+     + numeroDeColunas: int
+     + celulas: Map<String, Celula>
+     + utilizadores: Set<Utilizador>
+
+   - Métodos:
+     + criarCelula(linha: int, coluna: int, conteudo: Conteudo): void
+     + obterCelula(linha: int, coluna: int): Celula
+     + copiar(gama: Gama, cutBuffer: CutBuffer): void
+     + cortar(gama: Gama, cutBuffer: CutBuffer): void
+     + colar(gama: Gama, cutBuffer: CutBuffer): void
+     + calcularFuncao(gama: Gama, funcao: Funcao): void
+     + adicionarUtilizador(utilizador: Utilizador): void
+
+2. **Classe Celula**
+   - Atributos:
+     + linha: int
+     + coluna: int
+     + conteudo: Conteudo
+
+   - Métodos:
+     + alterarConteudo(conteudo: Conteudo): void
+
+3. **Classe Abstrata Conteudo**
+   - Subclasses:
+     + Literal
+       - Inteiro
+         * valor: int
+       - CadeiaCaracteres
+         * valor: String
+     + Referencia
+       * endereco: String
+     + Funcao
+       * nome: String
+       * argumentos: List<Conteudo>
+
+4. **Classe Gama**
+   - Atributos:
+     + celulaInicial: Celula
+     + celulaFinal: Celula
+
+   - Métodos:
+     + obterCelulas(): List<Celula>
+
+5. Classe Utilizador
+
+    Atributos:
+        nome: String (identificador único)
+        folhasDeCalculo: Set<FolhaDeCalculo>
+
+    Métodos:
+        criarFolhaDeCalculo(numeroDeLinhas: int, numeroDeColunas: int): FolhaDeCalculo
+        adicionarFolhaDeCalculo(folha: FolhaDeCalculo): void
+
+
+6. **Classe Abstrata Funcao**
+   - Subclasses:
+     + FuncaoBinaria (ADD, SUB, MUL, DIV)
+     + FuncaoGama (AVERAGE, PRODUCT, CONCAT, COALESCE)
+
+   - Métodos (nas subclasses conforme necessário):
+     + aplicar(argumentos: List<Conteudo>): String
+
+7. **TipoFuncao**
+   - Valores:
+     + ADD
+     + SUB
+     + MUL
+     + DIV
+     + AVERAGE
+     + PRODUCT
+     + CONCAT
+     + COALESCE
+
+8. **Classe Cut**
+   - Atributos:
+     + conteudo: Map<String, Conteudo>
+
+   - Métodos:
+     + adicionarConteudo(chave: String, conteudo: Conteudo): void
+     + obterConteudo(chave: String): Conteudo
+     + limpar(): void
+
+
+
++--------------------------------------------------+
+|                  Aplicacao                       |
++--------------------------------------------------+
+| - utilizadorAtivo: Utilizador                    |
+| - cutBuffer: CutBuffer                           |
+| - utilizadores: List<Utilizador>                 |
+| - folhas: List<FolhaDeCalculo>                   |   //Relacionamentos: 1 Aplicacao possui 1..* FolhaDeCalculo |E| 1 Aplicacao possui 1..* Utilizador
+| - folhaAtiva: FolhaDeCalculo                     |
+| - ficheiroAtual: String                      	   |  //ficehiro atual uma vez que o nome das folhas é o nome do ficheiro associado e apenas tem um ativo de cada vez
++--------------------------------------------------+
+| + criarFolha(linhas: int, colunas: int): FolhaDeCalculo |
+| + abrirFolha(nomeFicheiro: String): void         |  //tem uma execpçao FileOpenFailedException  e altera o atributo _folhaAtiva e ?altera a lista de _folhas?
+| + guardarFolha(): void                           |
+| + trocarUtilizadorAtivo(nome: String): void      |
+| + adicionarUtilizador(utilizador: String): void  |
++--------------------------------------------------+
+                       |
+                       |                                                      +----------------------------------+
+                       |                                                      |            CutBuffer             |  //relacionamento: composiçao entre CutBuffer e Aplicacao
+                       |                                                       +----------------------------------+
+                       |                                                      | - _gama: Gama      |
+                       |                                                      +----------------------------------+
+                       |                                                      | + setGama(gama: Gama): void 	 |
+                       |                                                      | + setGama(): void                |
+					   |                                                      | + getGama(): Gama                |
+					   |                                                      | + toString(): String             |
+                       |                                                      +----------------------------------+
+                       | 0..*
+                       |
++-----------------------+-------------------------+
+|          FolhaDeCalculo                        |
++--------------------------------------------------+	//1 FolhaDeCalculo possui 1..* Celula
+| - size: int[2]                                  |     //[linhas][colunas]
+| - linhas: Celula[][]                           |		//[linhas][colunas]
+| - ficheiro: String                              |		//não tem nome, apenas ficheiro associado
++--------------------------------------------------+
+| + FolhaDeCalculo(linhas: int, colunas: int)
+| + obterCelula(linha: int, coluna: int): Celula  |
+/*| + definirConteudo(celula: Celula, conteudo: Conteudo): void |*/
++--------------------------------------------------+
+                |
+                | 1..*
+                |
++---------------+-----------------+
+|               Celula            |
++----------------------------------+
+| - _coords: int[2]                 |
+| - _conteudo: Conteudo             |
++----------------------------------+
+| + Celula()					   |
+| + obterConteudo(): Conteudo      |
+| + definirConteudo(conteudo: Conteudo): void |
++----------------------------------+
+
+                       |                                           +-----------------------+
+                       |                                           |         Gama          |
+                       |                                           +-----------------------+
+                       |                                           | - _extremos: Celula[2] |/*inicio e fim */
+                       |                                           +-----------------------+
+					   |										   | + Gama(inic: Celula, fim: Celula)|
+					   |										   | + getExtrs(): Celula[2]|
+                       |                                           | + getCelulas(): List<Celula> |
+					   |                                           | + getConteudos(): List<Conteudos> |
+					   |										   | + toString(): String	|
+                       |                                           +-----------------------+
+                       |
+                       | 1
+                       |
+                       |
+                       |
+                       |
+ 					   |
++----------------------+---------------------------+
+|                   Conteudo                       |
++---------------------------------------------------+
+| - _tipo: int                                      |/*0 - NULL, 1 - Int, 2 - Texto(String), 3 - Referencia(Celula), 4 - Funcao */
++---------------------------------------------------+
+| + Conteudo()     						            |
+| + <abstract> toString(): String                   |
++---------------------------------------------------+
+           ^                     ^                   ^
+           |                     |                   |
+           |                     |                   |
+  +--------+---------+  +---------+----------+  +-----+------+
+  |    Numero        |  |      Texto        |  | Referencia |           //Subclasses de Conteudo
+  +------------------+  +-------------------+  +------------+
+  | - _valor: int     |  | - _valor: String |  | - _celula: Celula|
+  	+ getValor(): int	 + getValor(): String	+ getCelula(): Celula
+	+ toString(): String + toString(): String   + toString(): String
+  +------------------+  +-------------------+  +------------+
+                       |
+                       | 0..1
+                       |
+  +----------------------+---------------------------+
+  |                    Funcao                        |
+  +--------------------------------------------------+
+  |                        							 |
+  +--------------------------------------------------+
+  | 												 |
+  +--------------------------------------------------+
+               ^
+               |
+               |/*Desenho no tablet das funcoes todas (binarias e intervalos) */ 
+  +------------+------------+-----------------+--------------+-------------+
+  |      ADD               |      SUB        |     MUL      |    DIV      |      //subclasses de Funçao
+  +------------------------+-----------------+--------------+-------------+
+  | - argumento1: Valor    | - argumento1: Valor           |             |
+  | - argumento2: Valor    | - argumento2: Valor           |             |
+  +------------------------+-----------------+--------------+-------------+
+  | + avaliar(): Valor     | + avaliar(): Valor            |             |
+  +------------------------+-----------------+--------------+-------------+
+                                        ^
+                                        |
+                                        |
+                       +----------------+-----------------+
+                       |              AVERAGE             |
+                       +----------------------------------+
+                       | - gama: Gama                     |
+                       +----------------------------------+
+                       | + avaliar(): Valor               |
+                       +----------------------------------+
+                                       |
+                                       |
+                       +--------------+--------------+
+                       |           CONCAT            |
+                       +----------------------------+
+                       | - gama: Gama               |
+                       +----------------------------+
+                       | + avaliar(): Valor         |
+                       +----------------------------+
+                                       |
+                                       |
+                       +--------------+--------------+
+                       |          PRODUCT            |
+                       +----------------------------+
+                       | - gama: Gama               |
+                       +----------------------------+
+                       | + avaliar(): Valor         |
+                       +----------------------------+
+                                       |
+                                       |
+                       +--------------+--------------+
+                       |          COALESCE           |
+                       +----------------------------+
+                       | - gama: Gama               |
+                       +----------------------------+
+                       | + avaliar(): Valor         |
+                       +----------------------------+
+                                       |
+                                       |
+
+  +-------------------------------------------------------------------------------------+
+|                                      Utilizador                                     |     //deve existir uma relação bidireccional de muitos para muitos entre utilizadores e folhas de cálculo
++-------------------------------------------------------------------------------------+
+| - nome: String                                                                        |
+| - folhas: List<FolhaDeCalculo>                                                        |
++-------------------------------------------------------------------------------------+
+| + adicionarFolha(folha: FolhaDeCalculo): void                                        |
+| + removerFolha(folha: FolhaDeCalculo): void                                          |
+| + getNome(): String                                          						   |
++-------------------------------------------------------------------------------------+
+
+
+
+      //Interaçao com o usuario (COMANDO E MENU): Não é para esta entrega:
+/* 
++-----------------------+-------------------------+
+|                   ComandoUI                    |
++------------------------------------------------+
+| - form: Form                                   |
+| - display: Display                             |
++------------------------------------------------+
+| + executar(): void                             |
++------------------------------------------------+
+                       |
+                       | uses
+                       |
++-----------------------+-------------------------+
+|                MainMenu                          |
++--------------------------------------------------+
+|                                                  |
++--------------------------------------------------+
+| + criar(): void                                  |
+| + abrir(): void                                  |
+| + guardar(): void                                |
+| + abrirMenuEdicao(): void                        |
+| + abrirMenuConsultas(): void                     |
+| + sair(): void                                   |
++--------------------------------------------------+
+                  |
+                  | uses
+                  |
+ +---------------+--------------+-------------------+------------------+--------------------------------------+
+ |            DoNew            |       DoOpen      |      DoSave      |  DoOpenMenuEdit   | DoOpenMenuSearch  |
+ +-----------------------------+-------------------+------------------+-------------------+-------------------+
+ |                             |                   |                  |                   |                   |
+ +-----------------------------+-------------------+------------------+-------------------+-------------------+
+ | + execute(): void           | + execute(): void | + execute(): void| + execute(): void | + execute(): void |
+ +-----------------------------+-------------------+------------------+-------------------+-------------------+
+                  |
+                  | uses
+                  |
++-----------------+-------------------------+
+|              Message                      |
++-------------------------------------------+
+| - xxl.app.main.Message                    |
++-------------------------------------------+
+| + criarMensagem(): String                 |
+| + abrirMensagem(): String                 |
+| + guardarMensagem(): String               |
+| + lines(): String                         |
+| + columns(): String                       |
+| + openFile(): String                      |
+| + newSaveAs(): String                     |
+| + saveBeforeExit(): String                |
+| + readBoolean(): boolean                  |
++-------------------------------------------+
+
++--------------------------+
+|  FileOpenFailedException |    //Classe de exceção para representar falhas ao abrir arquivos
++--------------------------+
+|                          |
++--------------------------+
+
+*/
+
+Duvida se é para esta primeira entrega
+
+/*   //adicionado na Aplicaçao:
+
++--------------------------------------------------+
+|                  Visualizador                    |  //Alternativa: Na celula e na Gama fazer metodos 
++--------------------------------------------------+
+|                                                  |
++--------------------------------------------------+
+| + visualizarCelula(celula: Celula): String       |
+| + visualizarGama(gama: Gama): String             |
++--------------------------------------------------+
+
++--------------------------+
+|        InserirComando     |
++--------------------------+
+| - gama: Gama             |
+| - conteudo: String       |
++--------------------------+
+| + executar(): void       |
++--------------------------+
+
++--------------------------+
+|        CopiarComando     |
++--------------------------+
+| - gama: Gama             |
++--------------------------+
+| + executar(): void       |
++--------------------------+
+
++--------------------------+
+|        ApagarComando     |
++--------------------------+
+| - gama: Gama             |
++--------------------------+
+| + executar(): void       |
++--------------------------+
+
++--------------------------+
+|        CortarComando     |
++--------------------------+
+| - gama: Gama             | 
++--------------------------+
+| + executar(): void       |
++--------------------------+
+
++--------------------------+
+|        ColarComando      |
++--------------------------+
+| - gama: Gama             |
++--------------------------+
+| + executar(): void       |
++--------------------------+
+
++-------------------------------+
+|   VisualizarCutBufferComando  |
++-------------------------------+
+| + executar(): void            |
++-------------------------------+
+
++--------------------------+
+|          CutBuffer       |
++--------------------------+
+| - conteudo: String       |
++--------------------------+
+| + copiar(gama: Gama): void |
+| + cortar(gama: Gama): void |
+| + colar(gama: Gama): void  |
+| + visualizar(): String     |
++--------------------------+
+
+*/
+
+
+Relacionamentos:
+
+    FolhaDeCalculo
+        1..* ---> Célula (uma FolhaDeCalculo possui muitas Células)
+        .. <--> Utilizador (uma FolhaDeCalculo está associada a muitos Utilizadores, e um Utilizador possui muitas FolhasDeCalculo)
+
+    Célula
+        1 ---> Conteúdo (uma Célula possui um Conteúdo)
+
+    Conteúdo
+        É superclasse de Literal, Referência e Função
+
+    Referência
+        1 ---> Célula (uma Referência aponta para uma Célula)
+
+    Função
+        É superclasse de FunçãoBinária e FunçãoGama
+
+    CutBuffer
+        0..* ---> Conteúdo (um CutBuffer pode ter múltiplos Conteúdos)
+
+
+                 // ... (Resto das Classes e Relações Anteriores)
+
+
+
+
+/* O q o chatgpt fez para as EXECÇOES 
++--------------------------------------------------+
+|                   Aplicacao                      |
++--------------------------------------------------+
+| - utilizadorAtivo: Utilizador                    |
+| - cutBuffer: Conteudo[]                          |
+| - utilizadores: List<Utilizador>                 |
++--------------------------------------------------+
+| + copiar(gama: Gama) throws CopiarException: void|
+| + cortar(gama: Gama) throws CortarException: void|
+| + colar(gama: Gama) throws ColarException: void  |
+| + criarFolha(linhas: int, colunas: int) throws CriarFolhaException: FolhaDeCalculo |
+| + trocarUtilizadorAtivo(nome: String) throws UtilizadorNaoEncontradoException: void |
+| + adicionarUtilizador(utilizador: Utilizador) throws UtilizadorExistenteException: void |
++--------------------------------------------------+
+...
+
++--------------------------------------------------+
+|                   Celula                         |
++--------------------------------------------------+
+| - linha: int                                     |
+| - coluna: int                                    |
+| - conteudo: Conteudo                             |
++--------------------------------------------------+
+| + obterConteudo() throws ConteudoNaoEncontradoException: Conteudo |
+| + definirConteudo(conteudo: Conteudo) throws DefinirConteudoException: void |
++--------------------------------------------------+
+...
+*/
